@@ -1,0 +1,5 @@
+/home/arthur/Cadeiras/CG/Shadow-Mapping/build/CMakeFiles/rebuild_cache.dir
+/home/arthur/Cadeiras/CG/Shadow-Mapping/build/CMakeFiles/STB_IMAGE.dir
+/home/arthur/Cadeiras/CG/Shadow-Mapping/build/CMakeFiles/CG_UFPel.dir
+/home/arthur/Cadeiras/CG/Shadow-Mapping/build/CMakeFiles/edit_cache.dir
+/home/arthur/Cadeiras/CG/Shadow-Mapping/build/CMakeFiles/GLAD.dir
