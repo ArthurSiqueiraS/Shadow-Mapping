@@ -1,6 +1,6 @@
 // settings
-#define SCR_WIDTH 1280
-#define SCR_HEIGHT 720
+#define SCR_WIDTH 1024
+#define SCR_HEIGHT 1024
 
 GLFWwindow* window;
 // camera

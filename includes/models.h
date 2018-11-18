@@ -13,6 +13,7 @@ void loadLight() {
 
 void loadCyborg() {
 	cyborg = new Model(FileSystem::getPath("resources/objects/cyborg/cyborg.obj"));
+	cyborgMat = glm::translate(cyborgMat, glm::vec3(-5.0, 0.0, 0.0));
 }
 
 void loadCubes() {
@@ -110,10 +111,23 @@ void renderCubes(const Shader &shader) {
 }
 
 void renderFloor() {
-	// floor
-    // glBindVertexArray(planeVAO);
     shader->setMat4("model", floorMat);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
     floorPanel->Draw(*shader);
+}
 
+void renderPlane(const Shader &shader) {
+	glBindVertexArray(planeVAO);
+    shader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+// renders the 3D scene
+// --------------------
+void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
+{
+    renderPlane(shader);
+    renderCubes(shader);
+    renderCyborg(shader);
+    // Must be rendered last
+    renderBulb(lightColor, lightPos);
 }

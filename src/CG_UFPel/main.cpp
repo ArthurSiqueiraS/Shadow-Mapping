@@ -18,13 +18,9 @@
 #include <helpers.h>
 #include <models.h>
 
-void renderScene(const Shader &shader);
-void renderCube();
-void renderQuad();
-
 // lighting info
 // -------------
-glm::vec3 lightPos(-2.0f, 3.0f, -1.0f);
+glm::vec3 lightPos(-8.0, 4.0, 2.0);
 glm::vec3 lightColor(1.0, 1.0, 1.0);
 
 int main()
@@ -79,14 +75,14 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+        // change light position over time
+        // lightPos.x = sin(glfwGetTime()) * 15.0f;
+        // lightPos.z = cos(glfwGetTime()) * 6.0f;
+        // lightPos.y = 3.0 + cos(glfwGetTime()) * 1.0f;
+        
         // input
         // -----
         processInput(window);
-
-        // change light position over time
-        lightPos.x = sin(glfwGetTime()) * 3.0f;
-        lightPos.z = cos(glfwGetTime()) * 2.0f;
-        lightPos.y = 5.0 + cos(glfwGetTime()) * 1.0f;
 
         // render
         // ------
@@ -97,8 +93,8 @@ int main()
         // --------------------------------------------------------------
         glm::mat4 lightProjection, lightView;
         glm::mat4 lightSpaceMatrix;
-        float near_plane = 1.0f, far_plane = 7.5f;
-        //lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+        float near_plane = 0.01f, far_plane = 60.0f;
+        // lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
         lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
         lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
         lightSpaceMatrix = lightProjection * lightView;
@@ -109,14 +105,10 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
             glClear(GL_DEPTH_BUFFER_BIT);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, woodTexture);
-            renderScene(*simpleDepthShader);
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, woodTexture);
+            renderScene(*simpleDepthShader, lightColor, lightPos);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        // reset viewport
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // 2. render scene as normal using the generated depth/shadow map  
         // --------------------------------------------------------------
@@ -136,7 +128,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMap);
-        renderScene(*shader);
+        renderScene(*shader, lightColor, lightPos);
 
         // render Depth map to quad for visual debugging
         // ---------------------------------------------
@@ -145,7 +137,7 @@ int main()
         debugDepthQuad->setFloat("far_plane", far_plane);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, depthMap);
-        // renderQuad();
+        renderQuad();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -160,15 +152,4 @@ int main()
 
     glfwTerminate();
     return 0;
-}
-
-// renders the 3D scene
-// --------------------
-void renderScene(const Shader &shader)
-{
-    renderFloor();
-    renderCubes(shader);
-    renderCyborg(shader);
-    // Must be rendered last
-    renderBulb(lightColor, lightPos);
 }
