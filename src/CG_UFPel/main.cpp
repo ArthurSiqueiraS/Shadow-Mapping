@@ -130,6 +130,7 @@ int main()
         // set light uniforms
         shader->setVec3("viewPos", camera.Position);
         shader->setVec3("lightPos", lightPos);
+        shader->setVec3("lightColor", lightColor);
         shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
