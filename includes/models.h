@@ -2,31 +2,45 @@
 #define nOCubes 3
 
 Shader *shader, *simpleDepthShader, *debugDepthQuad, *lightShader;
-Model *light, *cyborg, *cube, *openCube, *floorPanel;
-glm::mat4 lightMat, cyborgMat, cubeMats[nCubes], openCubeMats[nOCubes], floorMat, model;
+Model *cyborg, *sphere, *rock, *cube, *openCube, *floorPanel;
+glm::mat4 lightMat, cyborgMat, sphereMat, rockMat, cubeMats[nCubes], openCubeMats[nOCubes], floorMat, model;
 
 unsigned int planeVAO;
 
-void loadLight() {
-	light = new Model(FileSystem::getPath("resources/objects/planet/planet.obj"));
+void loadCyborg() {
+    cyborg = new Model(FileSystem::getPath("resources/objects/cyborg/cyborg.obj"));
+    cyborgMat = glm::translate(cyborgMat, glm::vec3(-5.0, -0.5, 0.0));
 }
 
-void loadCyborg() {
-	cyborg = new Model(FileSystem::getPath("resources/objects/cyborg/cyborg.obj"));
-	cyborgMat = glm::translate(cyborgMat, glm::vec3(-5.0, -0.5, 0.0));
+void loadSphere() {
+	sphere = new Model(FileSystem::getPath("resources/objects/planet/planet.obj"));
+    sphereMat = glm::translate(sphereMat, glm::vec3(0.0, 5.0, -3.0));
+    sphereMat = glm::scale(sphereMat, glm::vec3(0.4));
+}
+
+void loadRock() {
+	rock = new Model(FileSystem::getPath("resources/objects/rock/rock.obj"));
+    rockMat = glm::translate(rockMat, glm::vec3(0.0, -0.5, 5.0));
+    rockMat = glm::scale(rockMat, glm::vec3(0.2));
 }
 
 void loadCubes() {
 	// From https://www.turbosquid.com/
 	cube = new Model(FileSystem::getPath("resources/objects/cube.obj"));
 	openCube = new Model(FileSystem::getPath("resources/objects/openCube.obj"));
+    for(int i = 0; i < nCubes; ++i) 
+        cubeMats[i] = glm::translate(cubeMats[i], glm::vec3((float) i, 0.0, 0.0));
+    for(int i = 0; i < nOCubes; ++i) {
+        openCubeMats[i] = glm::translate(openCubeMats[i], glm::vec3((float) (i * 2 + 5), 0.0, 0.0));
+        openCubeMats[i] = glm::rotate(openCubeMats[i], glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        openCubeMats[i] = glm::rotate(openCubeMats[i], glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+    }
 }
  
 void loadFloor() {
 	// From https://www.free3d.com
 	floorPanel = new Model(FileSystem::getPath("resources/objects/floor/floor.obj"));
-	floorMat = glm::rotate(floorMat, glm::radians(90.0f), glm::vec3(-1.0, 0.0, 0.0));
-	floorMat = glm::scale(floorMat, glm::vec3(1.0, 1.0, 0.01));
+	floorMat = glm::scale(floorMat, glm::vec3(0.2, 0.2, 0.5));
 }
 
 void loadPlane() {
@@ -68,8 +82,9 @@ void loadModels() {
     debugDepthQuad = new Shader(FileSystem::getPath("resources/debug.vs").c_str(), FileSystem::getPath("resources/debug.fs").c_str());
     lightShader = new Shader(FileSystem::getPath("resources/light.vs").c_str(), FileSystem::getPath("resources/light.fs").c_str());
 
-	loadLight();
 	loadCyborg();
+    loadSphere();
+    loadRock();
 	loadCubes();
 	loadFloor();
 	loadPlane();
@@ -86,41 +101,26 @@ void renderBulb(glm::vec3 lightColor, glm::vec3 lightPos) {
 	lightShader->setMat4("projection", projection);
     lightShader->setMat4("view", view);
     lightShader->setVec3("lightColor", lightColor);
-	light->Draw(*lightShader);
+	sphere->Draw(*lightShader);
 }
 
-void renderCyborg(const Shader &shader) {
-	shader.setMat4("model", cyborgMat);
-	shader.setFloat("modelBias", 1.0);
-	cyborg->Draw(shader);
-}
-
-void renderCube(const Shader &shader, glm::mat4 model) {
-	shader.setMat4("model", model);
-	cube->Draw(shader);
-}
-
-void renderOpenCube(const Shader &shader, glm::mat4 model) {
-	shader.setMat4("model", model);
-	openCube->Draw(shader);
-}
-
-void renderCubes(const Shader &shader) {
-	for(int i = 0; i < nCubes; ++i)
-		renderCube(shader, cubeMats[i]);
-	for(int i = 0; i < nOCubes; ++i)
-		renderCube(shader, openCubeMats[i]);	
-}
-
-void renderFloor(const Shader &shader) {
-    shader.setMat4("model", floorMat);
-    floorPanel->Draw(shader);
+void render(const Shader &shader, Model obj, glm::mat4 model, float modelBias) {
+    shader.setMat4("model", model);
+    shader.setFloat("modelBias", modelBias);
+    obj.Draw(shader);
 }
 
 void renderPlane(const Shader &shader) {
 	glBindVertexArray(planeVAO);
     shader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void renderCubes(const Shader &shader) {
+    for(int i = 0; i < nCubes; ++i)
+        render(shader, *cube, cubeMats[i], 0.0);
+    for(int i = 0; i < nOCubes; ++i)
+        render(shader, *openCube, openCubeMats[i], 0.0);
 }
 
 // renders the 3D scene
@@ -130,8 +130,11 @@ void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
 	shader.setFloat("modelBias", 0.0);
 	// renderFloor(shader);
     renderPlane(shader);
-    renderCubes(shader);
-    renderCyborg(shader);
+    render(shader, *cube, cubeMats[0], 0.0);
+    render(shader, *openCube, openCubeMats[0], 0.0);
+    render(shader, *sphere, sphereMat, 0.0);
+    render(shader, *rock, rockMat, 0.5);
+    render(shader, *cyborg, cyborgMat, 0.5);
     // Must be rendered last
     renderBulb(lightColor, lightPos);
 }
