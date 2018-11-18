@@ -13,7 +13,7 @@ void loadLight() {
 
 void loadCyborg() {
 	cyborg = new Model(FileSystem::getPath("resources/objects/cyborg/cyborg.obj"));
-	cyborgMat = glm::translate(cyborgMat, glm::vec3(-5.0, 0.0, 0.0));
+	cyborgMat = glm::translate(cyborgMat, glm::vec3(-5.0, -0.5, 0.0));
 }
 
 void loadCubes() {
@@ -26,6 +26,7 @@ void loadFloor() {
 	// From https://www.free3d.com
 	floorPanel = new Model(FileSystem::getPath("resources/objects/floor/floor.obj"));
 	floorMat = glm::rotate(floorMat, glm::radians(90.0f), glm::vec3(-1.0, 0.0, 0.0));
+	floorMat = glm::scale(floorMat, glm::vec3(1.0, 1.0, 0.01));
 }
 
 void loadPlane() {
@@ -90,6 +91,7 @@ void renderBulb(glm::vec3 lightColor, glm::vec3 lightPos) {
 
 void renderCyborg(const Shader &shader) {
 	shader.setMat4("model", cyborgMat);
+	shader.setFloat("modelBias", 1.0);
 	cyborg->Draw(shader);
 }
 
@@ -110,9 +112,9 @@ void renderCubes(const Shader &shader) {
 		renderCube(shader, openCubeMats[i]);	
 }
 
-void renderFloor() {
-    shader->setMat4("model", floorMat);
-    floorPanel->Draw(*shader);
+void renderFloor(const Shader &shader) {
+    shader.setMat4("model", floorMat);
+    floorPanel->Draw(shader);
 }
 
 void renderPlane(const Shader &shader) {
@@ -125,6 +127,8 @@ void renderPlane(const Shader &shader) {
 // --------------------
 void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
 {
+	shader.setFloat("modelBias", 0.0);
+	// renderFloor(shader);
     renderPlane(shader);
     renderCubes(shader);
     renderCyborg(shader);
