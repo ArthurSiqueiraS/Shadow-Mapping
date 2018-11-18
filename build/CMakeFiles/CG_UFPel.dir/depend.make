@@ -31,6 +31,7 @@ CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/assimp/vector2.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/assimp/vector2.inl
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/assimp/vector3.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/assimp/vector3.inl
+CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glSetup.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glad/glad.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/common.hpp
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/detail/_fixes.hpp
@@ -119,13 +120,15 @@ CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/vec2.hpp
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/vec3.hpp
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/vec4.hpp
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/glm/vector_relational.hpp
+CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/helpers.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/camera.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/filesystem.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/mesh.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/model.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/shader.h
-CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/learnopengl/shader_m.h
+CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/models.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/stb_image.h
+CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../includes/window.h
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: ../src/CG_UFPel/main.cpp
 CMakeFiles/CG_UFPel.dir/src/CG_UFPel/main.cpp.o: configuration/root_directory.h
 

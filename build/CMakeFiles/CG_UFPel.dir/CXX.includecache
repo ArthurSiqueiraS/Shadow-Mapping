@@ -268,6 +268,10 @@ vector3.h
 cmath
 -
 
+../includes/glSetup.h
+window.h
+-
+
 ../includes/glad/glad.h
 windows.h
 -
@@ -1008,6 +1012,8 @@ detail/type_vec4.hpp
 detail/func_vector_relational.hpp
 ../includes/glm/detail/func_vector_relational.hpp
 
+../includes/helpers.h
+
 ../includes/learnopengl/camera.h
 glad/glad.h
 -
@@ -1092,19 +1098,7 @@ sstream
 iostream
 -
 
-../includes/learnopengl/shader_m.h
-glad/glad.h
--
-glm/glm.hpp
--
-string
--
-fstream
--
-sstream
--
-iostream
--
+../includes/models.h
 
 ../includes/stb_image.h
 stb_image.h
@@ -1136,10 +1130,14 @@ intrin.h
 arm_neon.h
 -
 
+../includes/window.h
+
 /home/arthur/Cadeiras/CG/Shadow-Mapping/src/CG_UFPel/main.cpp
 glad/glad.h
 -
 GLFW/glfw3.h
+-
+stb_image.h
 -
 glm/glm.hpp
 -
@@ -1149,13 +1147,19 @@ glm/gtc/type_ptr.hpp
 -
 learnopengl/filesystem.h
 -
-learnopengl/shader_m.h
+learnopengl/shader.h
 -
 learnopengl/camera.h
 -
 learnopengl/model.h
 -
 iostream
+-
+glSetup.h
+-
+helpers.h
+-
+models.h
 -
 
 configuration/root_directory.h

@@ -1,125 +1,74 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <learnopengl/filesystem.h>
-#include <learnopengl/shader_m.h>
+#include <learnopengl/shader.h>
 #include <learnopengl/camera.h>
 #include <learnopengl/model.h>
 
 #include <iostream>
 
-#define nCubes 6
+// Custom libs
+#include <glSetup.h>
+#include <helpers.h>
+#include <models.h>
 
-void renderScene(Shader lightShader, Shader phongShader, vector<Model> models);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void renderScene(const Shader &shader);
+void renderCube();
+void renderQuad();
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
-// timing
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
-// build and compile shaders
-// -------------------------
-
-// Set light source position and intensity
-glm::vec3 lightPos(-10.0f, 6.0f, -7.0f);
-glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-
-glm::vec3 c[nCubes];
+// lighting info
+// -------------
+glm::vec3 lightPos(-2.0f, 3.0f, -1.0f);
+glm::vec3 lightColor(1.0, 1.0, 1.0);
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    if(glSetup() == -1)
+        return -1;
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
-#endif
+    // load textures
+    // -------------
+    unsigned int woodTexture = loadTexture(FileSystem::getPath("resources/textures/wood.png").c_str());
 
-    // glfw window creation
+    loadModels();
+
+    // configure depth map FBO
+    // -----------------------
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth texture
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // shader configuration
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    shader->use();
+    shader->setInt("diffuseTexture", 0);
+    shader->setInt("shadowMap", 1);
+    debugDepthQuad->use();
+    debugDepthQuad->setInt("depthMap", 0);
 
-    // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    // configure global opengl state
-    // -----------------------------
-    glEnable(GL_DEPTH_TEST);
-
-    // Phong shader
-    Shader phongShader(FileSystem::getPath("resources/cg_ufpel.vs").c_str(), FileSystem::getPath("resources/cg_ufpel.fs").c_str());
-    // Basic shader to render light source
-    Shader lightShader(FileSystem::getPath("resources/light.vs").c_str(), FileSystem::getPath("resources/light.fs").c_str());
-
-    // load models
-    // -----------
-    // Cyborg model
-    Model cyborg(FileSystem::getPath("resources/objects/cyborg/cyborg.obj"));
-    // Light source 'bulb'
-    Model light(FileSystem::getPath("resources/objects/planet/planet.obj"));
-    // Cube .objs from https://www.turbosquid.com/
-    Model cube(FileSystem::getPath("resources/objects/Cube.obj"));
-    Model openCube(FileSystem::getPath("resources/objects/bl.obj"));
-    // Floor mat .obj from https://free3d.com/
-    Model floorMat(FileSystem::getPath("resources/objects/floor/16859_floor_mat_V2.obj"));
-    
-    vector<Model> models;
-    models.push_back(light);
-    models.push_back(cyborg);
-    models.push_back(cube);
-    models.push_back(openCube);
-    models.push_back(floorMat);
-
-    // Set each cube's location in space
-    c[0] = glm::vec3(-4.0, 0.0, -8.0);
-    c[1] = glm::vec3(-3.0, -1.0, -10.0);
-    c[2] = glm::vec3(1.0, -4.0, -11.0);
-    c[3] = glm::vec3(4.0, -5.0, -9.0);
-    c[4] = glm::vec3(2.0, 1.0, -8.0);
-    c[5] = glm::vec3(-3.5, -2.0, -12.0);
-
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -134,12 +83,68 @@ int main()
         // -----
         processInput(window);
 
+        // change light position over time
+        lightPos.x = sin(glfwGetTime()) * 3.0f;
+        lightPos.z = cos(glfwGetTime()) * 2.0f;
+        lightPos.y = 5.0 + cos(glfwGetTime()) * 1.0f;
+
         // render
         // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        renderScene(lightShader, phongShader, models);
+
+        // 1. render depth of scene to texture (from light's perspective)
+        // --------------------------------------------------------------
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        float near_plane = 1.0f, far_plane = 7.5f;
+        //lightProjection = glm::perspective(glm::radians(45.0f), (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane); // note that if you use a perspective projection matrix you'll have to change the light position as the current light position isn't enough to reflect the whole scene
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
+        // render scene from light's point of view
+        simpleDepthShader->use();
+        simpleDepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, woodTexture);
+            renderScene(*simpleDepthShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // reset viewport
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // 2. render scene as normal using the generated depth/shadow map  
+        // --------------------------------------------------------------
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        shader->use();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        shader->setMat4("projection", projection);
+        shader->setMat4("view", view);
+        // set light uniforms
+        shader->setVec3("viewPos", camera.Position);
+        shader->setVec3("lightPos", lightPos);
+        shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, woodTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        renderScene(*shader);
+
+        // render Depth map to quad for visual debugging
+        // ---------------------------------------------
+        debugDepthQuad->use();
+        debugDepthQuad->setFloat("near_plane", near_plane);
+        debugDepthQuad->setFloat("far_plane", far_plane);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        // renderQuad();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -147,129 +152,22 @@ int main()
         glfwPollEvents();
     }
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &planeVAO);
+    
+
     glfwTerminate();
     return 0;
 }
 
-void renderScene(Shader lightShader, Shader shader, vector<Model> models) {
-    // view/projection transformations
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-
-    // render light source bulb
-    lightShader.use();
-    glm::mat4 model;
-    lightShader.setVec3("lightColor", lightColor);
-    lightShader.setMat4("projection", projection);
-    lightShader.setMat4("view", view);
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3(0.2));
-    lightShader.setMat4("model", model);
-    models[0].Draw(lightShader);   
-
-    shader.use();
-    shader.setVec3("lightColor", lightColor);
-    shader.setVec3("lightPos", lightPos);
-    shader.setVec3("viewPos", camera.Position); 
-    shader.setMat4("projection", projection);
-    shader.setMat4("view", view);
-
-    // render cyborg model
-    model = glm::mat4();
-    shader.setVec3("color", 0.0, 0.0, 0.0);
-    model = glm::translate(model, glm::vec3(0.0f, -5.0f, -10.0f)); 
-    model = glm::rotate(model, glm::radians(70.0f), glm::vec3(0.0, -1.0, 0.0));
-    model = glm::scale(model, glm::vec3(0.75f, 0.75f, 0.75f)); 
-    shader.setMat3("inv", glm::mat3(glm::transpose(glm::inverse(model))));
-    shader.setMat4("model", model);
-    models[1].Draw(shader);        
-
-    // render the floor
-    model = glm::mat4();
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(-1.0, 0.0, 0.0));
-    model = glm::translate(model, glm::vec3(0.0f, 10.0f, -5.25f)); 
-    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.2f)); 
-    shader.setVec3("color", 0.60, 0.38, 0.09);
-    shader.setMat3("inv", glm::mat3(glm::transpose(glm::inverse(model))));
-    shader.setMat4("model", model);
-    models[4].Draw(shader);
-
-    // render wall
-    model = glm::mat4();
-    model = glm::translate(model, glm::vec3(0.0f, 5.0f, -20.0f));
-    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.2f)); 
-    shader.setMat3("inv", glm::mat3(glm::transpose(glm::inverse(model))));
-    shader.setMat4("model", model);
-    models[4].Draw(shader);
-
-    // render open and closed cubes in alternated order
-    int open;
-    for(int i = 0; i < nCubes; ++i) {
-        open = i % 2 == 0;
-        model = glm::mat4();
-        // model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, open, 0.0));
-        model = glm::translate(model, c[i]);
-        shader.setVec3("color", glm::vec3(0.30, 0.5, 0.29) + glm::vec3(-open * 0.1, -open * 0.15, open * 0.2));
-        shader.setMat3("inv", glm::mat3(glm::transpose(glm::inverse(model))));
-        shader.setMat4("model", model);
-        if(open) 
-            models[2].Draw(shader);
-        else
-            models[3].Draw(shader);
-    }
-}
-
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+// renders the 3D scene
+// --------------------
+void renderScene(const Shader &shader)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-}
-
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
-}
-
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll(yoffset);
+    renderFloor();
+    renderCubes(shader);
+    renderCyborg(shader);
+    // Must be rendered last
+    renderBulb(lightColor, lightPos);
 }
