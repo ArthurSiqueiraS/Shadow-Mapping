@@ -13,6 +13,10 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+bool biased = false;
+bool clamped = false;
+bool Bpress = false;
+bool Cpress = false;
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
@@ -28,6 +32,20 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !Bpress) {
+        biased = !biased;
+        Bpress = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+        Bpress = false;
+
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !Cpress) {
+        clamped = !clamped;
+        Cpress = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
+        Cpress = false;
 }
 
 // glfw: whenever the mouse moves, this callback is called

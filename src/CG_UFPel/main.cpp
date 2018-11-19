@@ -126,6 +126,8 @@ int main()
         shader->setVec3("lightPos", lightPos);
         shader->setVec3("lightColor", lightColor);
         shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        shader->setBool("biased", biased);
+        shader->setBool("clamped", clamped);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);

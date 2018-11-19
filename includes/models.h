@@ -126,7 +126,7 @@ void renderCubes(const Shader &shader) {
 // renders the 3D scene
 // --------------------
 void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
-{
+{   
 	shader.setFloat("modelBias", 0.0);
 	// renderFloor(shader);
     renderPlane(shader);
