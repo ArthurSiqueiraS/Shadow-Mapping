@@ -1,9 +1,6 @@
-#define nCubes 3
-#define nOCubes 3
-
 Shader *shader, *simpleDepthShader, *debugDepthQuad, *lightShader;
 Model *cyborg, *sphere, *rock, *cube, *openCube, *floorPanel;
-glm::mat4 lightMat, cyborgMat, sphereMat, rockMat, cubeMats[nCubes], openCubeMats[nOCubes], floorMat, model;
+glm::mat4 lightMat, cyborgMat, sphereMat, rockMat, cubeMat, openCubeMat, floorMat, model;
 
 unsigned int planeVAO;
 
@@ -28,13 +25,10 @@ void loadCubes() {
 	// From https://www.turbosquid.com/
 	cube = new Model(FileSystem::getPath("resources/objects/cube.obj"));
 	openCube = new Model(FileSystem::getPath("resources/objects/openCube.obj"));
-    for(int i = 0; i < nCubes; ++i) 
-        cubeMats[i] = glm::translate(cubeMats[i], glm::vec3((float) i, 0.0, 0.0));
-    for(int i = 0; i < nOCubes; ++i) {
-        openCubeMats[i] = glm::translate(openCubeMats[i], glm::vec3((float) (i * 2 + 5), 0.0, 0.0));
-        openCubeMats[i] = glm::rotate(openCubeMats[i], glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-        openCubeMats[i] = glm::rotate(openCubeMats[i], glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-    }
+
+    openCubeMat = glm::translate(openCubeMat, glm::vec3(5.0, 0.0, 0.0));
+    openCubeMat = glm::rotate(openCubeMat, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+    openCubeMat = glm::rotate(openCubeMat, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
 }
  
 void loadFloor() {
@@ -116,13 +110,6 @@ void renderPlane(const Shader &shader) {
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void renderCubes(const Shader &shader) {
-    for(int i = 0; i < nCubes; ++i)
-        render(shader, *cube, cubeMats[i], 0.0);
-    for(int i = 0; i < nOCubes; ++i)
-        render(shader, *openCube, openCubeMats[i], 0.0);
-}
-
 // renders the 3D scene
 // --------------------
 void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
@@ -130,8 +117,8 @@ void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
 	shader.setFloat("modelBias", 0.0);
 	// render(shader, *floorPanel, floorMat, 0.0);
     renderPlane(shader);
-    render(shader, *cube, cubeMats[0], 0.5);
-    render(shader, *openCube, openCubeMats[0], 0.5);
+    render(shader, *cube, cubeMat, 0.5);
+    render(shader, *openCube, openCubeMat, 0.5);
     render(shader, *sphere, sphereMat, 0.0);
     render(shader, *rock, rockMat, 0.5);
     render(shader, *cyborg, cyborgMat, 0.5);

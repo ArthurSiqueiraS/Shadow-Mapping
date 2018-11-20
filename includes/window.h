@@ -17,10 +17,12 @@ bool biased = true;
 bool clamped = true;
 bool shadows = true;
 bool animateBulb = true;
+bool animations = true;
 bool Bpress = false;
 bool Cpress = false;
 bool Opress = false;
 bool Lpress = false;
+bool Npress = false;
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
@@ -64,6 +66,13 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
         Lpress = false;
+
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !Npress) {
+        animations = !animations;
+        Npress = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
+        Npress = false;
 }
 
 // glfw: whenever the mouse moves, this callback is called

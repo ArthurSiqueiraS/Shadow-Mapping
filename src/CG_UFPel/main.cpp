@@ -83,9 +83,15 @@ int main()
         lightPos.y = 5.0 + cos(frame) * 1.0f;
         
         if(animateBulb)
-        frame += deltaTime;
+        	frame += deltaTime;
         if(frame > 360.0) 
         	frame -= 360.0;
+
+        if(animations) {
+        	cyborgMat = glm::rotate(cyborgMat, glm::radians(120.0f * deltaTime), glm::vec3(0.0, -1.0, 0.0));
+    		openCubeMat = glm::rotate(openCubeMat, glm::radians(180.0f * deltaTime), glm::vec3(0.0, 1.0, 0.0));
+        }
+
 
         // input
         // -----
