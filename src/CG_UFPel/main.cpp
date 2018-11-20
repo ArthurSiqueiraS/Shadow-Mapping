@@ -64,6 +64,8 @@ int main()
     shader->setInt("shadowMap", 1);
     debugDepthQuad->use();
     debugDepthQuad->setInt("depthMap", 0);
+    
+    float frame = 0.0;
 
     // render loop
     // -----------
@@ -76,10 +78,15 @@ int main()
         lastFrame = currentFrame;
 
         // change light position over time
-        lightPos.x = sin(glfwGetTime()) * 6.0f;
-        lightPos.z = cos(glfwGetTime()) * 6.0f;
-        lightPos.y = 5.0 + cos(glfwGetTime()) * 1.0f;
+        lightPos.x = sin(frame) * 6.0f;
+        lightPos.z = cos(frame) * 6.0f;
+        lightPos.y = 5.0 + cos(frame) * 1.0f;
         
+        if(animateBulb)
+        frame += deltaTime;
+        if(frame > 360.0) 
+        	frame -= 360.0;
+
         // input
         // -----
         processInput(window);
@@ -128,6 +135,7 @@ int main()
         shader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
         shader->setBool("biased", biased);
         shader->setBool("clamped", clamped);
+        shader->setBool("shadows", shadows);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, woodTexture);
         glActiveTexture(GL_TEXTURE1);

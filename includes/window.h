@@ -13,10 +13,14 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-bool biased = false;
-bool clamped = false;
+bool biased = true;
+bool clamped = true;
+bool shadows = true;
+bool animateBulb = true;
 bool Bpress = false;
 bool Cpress = false;
+bool Opress = false;
+bool Lpress = false;
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
@@ -46,6 +50,20 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
         Cpress = false;
+
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS && !Opress) {
+        shadows = !shadows;
+        Opress = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_RELEASE)
+        Opress = false;
+
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !Lpress) {
+        animateBulb = !animateBulb;
+        Lpress = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
+        Lpress = false;
 }
 
 // glfw: whenever the mouse moves, this callback is called

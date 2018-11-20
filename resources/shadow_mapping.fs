@@ -12,6 +12,7 @@ uniform sampler2D diffuseTexture;
 uniform sampler2D shadowMap;
 uniform bool biased;
 uniform bool clamped;
+uniform bool shadows;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 viewPos;
@@ -50,7 +51,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         
     }
     // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if(projCoords.z > 1.0 && clamped)
+    if((projCoords.z > 1.0 && clamped) || !shadows)
         shadow = 0.0;
 
     return shadow;

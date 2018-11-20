@@ -128,10 +128,10 @@ void renderCubes(const Shader &shader) {
 void renderScene(const Shader &shader, glm::vec3 lightColor, glm::vec3 lightPos)
 {   
 	shader.setFloat("modelBias", 0.0);
-	// renderFloor(shader);
+	// render(shader, *floorPanel, floorMat, 0.0);
     renderPlane(shader);
     render(shader, *cube, cubeMats[0], 0.0);
-    render(shader, *openCube, openCubeMats[0], 0.0);
+    render(shader, *openCube, openCubeMats[0], 0.5);
     render(shader, *sphere, sphereMat, 0.0);
     render(shader, *rock, rockMat, 0.5);
     render(shader, *cyborg, cyborgMat, 0.5);
